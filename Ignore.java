@@ -1,38 +1,60 @@
 @Mock
-private WebClient webClientMock;
-
-@Mock
-private WebClient.RequestHeadersUriSpec requestHeadersUriSpecMock;
-
-@Mock
-private WebClient.RequestHeadersSpec requestHeadersSpecMock;
-
-@Mock
-private WebClient.ResponseSpec responseSpecMock;
+private CloudKeystoreService cloudKeystoreService;
 
 @InjectMocks
-private ExternalServiceConfig externalServiceConfig;
+private WebClientConfiguration webClientConfiguration;
 
 @Test
-public void testInvokeExternalService_Success() throws DocCenterServiceException {
+public void testGetWebclient() throws Exception {
     // Arrange
-    String serviceUrl = "/test";
-    String key = "key";
-    String value = "value";
-    String expectedResponse = "Success Response";
-
-    when(webClientMock.get()).thenReturn(requestHeadersUriSpecMock);
-    when(requestHeadersUriSpecMock.uri(any(Function.class))).thenReturn(requestHeadersSpecMock);
-    when(requestHeadersSpecMock.headers(any(Consumer.class))).thenReturn(requestHeadersSpecMock);
-    when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
-    when(responseSpecMock.onStatus(any(Predicate.class), any(Function.class))).thenReturn(responseSpecMock);
-    when(responseSpecMock.bodyToMono(String.class)).thenReturn(Mono.just(expectedResponse));
+    CachedKeyStore cachedKeyStore = new CachedKeyStore();
+    cachedKeyStore.setKeystore(mock(KeyStore.class));
+    cachedKeyStore.setPassword("password");
+    when(cloudKeystoreService.cache().get("mykeystore")).thenReturn(cachedKeyStore);
 
     // Act
-    Mono<String> result = externalServiceConfig.invokeExternalService(serviceUrl, key, value, headers -> {});
+    WebClient webClient = webClientConfiguration.getWebclient();
 
     // Assert
-    StepVerifier.create(result)
-            .expectNext(expectedResponse)
-            .verifyComplete();
+    assertNotNull(webClient);
+    assertEquals(webClientConfiguration.faBaseUrl, webClient.getWebClientConfiguration().getBaseUrl().toString());
+}
+
+@Test
+public void testBuildCloseableHttpAsyncClient() throws Exception {
+    // Arrange
+    CachedKeyStore cachedKeyStore = new CachedKeyStore();
+    cachedKeyStore.setKeystore(mock(KeyStore.class));
+    cachedKeyStore.setPassword("password");
+    when(cloudKeystoreService.cache().get("mykeystore")).thenReturn(cachedKeyStore);
+
+    // Act
+    CloseableHttpAsyncClient httpClient = webClientConfiguration.buildCloseableHttpAsyncClient();
+
+    // Assert
+    assertNotNull(httpClient);
+    assertTrue(httpClient instanceof CloseableHttpAsyncClient);
+}
+
+@Test
+public void testAddCommonRequestHeaderValues() {
+    // Act
+    Consumer<HttpHeaders> headerConsumer = webClientConfiguration.addCommonRequestHeaderValues();
+    HttpHeaders headers = new HttpHeaders();
+    headerConsumer.accept(headers);
+
+    // Assert
+    assertTrue(headers.containsKey(WF_SENDERMESSAGEID));
+    assertTrue(headers.containsKey(WF_CREATIONTIMESTAMP));
+    assertEquals(APPID, headers.getFirst(WF_SENDERAPPLICATIONID));
+    assertEquals(LOCALHOST, headers.getFirst(WF_SENDERHOSTNAME));
+}
+
+@Test(expected = Exception.class)
+public void testGetWebclientWithException() throws Exception {
+    // Arrange
+    when(cloudKeystoreService.cache().get("mykeystore")).thenThrow(new Exception());
+
+    // Act
+    webClientConfiguration.getWebclient();
 }
