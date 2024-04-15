@@ -1,3 +1,35 @@
+
+
+
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import static org.junit.jupiter.api.Assertions.*;
+
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = AppConfig.class)
+public class AppConfigTest {
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Test
+    public void testRestTemplateBean() {
+        assertNotNull(restTemplate);
+    }
+
+    @Test
+    public void testRestTemplateConfiguration() {
+        // Perform assertions on the restTemplate configuration
+        // For example, you can check if the restTemplate has the expected properties or behavior
+        // based on the configuration specified in the AppConfig class
+    }
+}
+
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
