@@ -1,3 +1,47 @@
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DataJpaTest
+public class EnumeratesRepositoryTest {
+
+    @Autowired
+    private EnumeratesRepository repository;
+
+    @Test
+    public void testFindByRowId_ExistingId_ReturnsEnumeratesEntity() {
+        // Arrange
+        Integer existingAppId = 1;
+        EnumeratesEntity entity = new EnumeratesEntity();
+        entity.setAppId(existingAppId);
+        repository.save(entity);
+
+        // Act
+        Optional<EnumeratesEntity> result = repository.findByRowId(existingAppId);
+
+        // Assert
+        assertThat(result).isPresent();
+        assertThat(result.get().getAppId()).isEqualTo(existingAppId);
+    }
+
+    @Test
+    public void testFindByRowId_NonExistingId_ReturnsEmptyOptional() {
+        // Arrange
+        Integer nonExistingAppId = 100;
+
+        // Act
+        Optional<EnumeratesEntity> result = repository.findByRowId(nonExistingAppId);
+
+        // Assert
+        assertThat(result).isEmpty();
+    }
+}
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
