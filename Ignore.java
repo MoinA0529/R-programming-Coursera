@@ -1,5 +1,70 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class EnumeratesServiceTest {
+
+    @Mock
+    private EnumeratesService service;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testFindByRowId_ExistingId_ReturnsEnumeratesEntity() {
+        // Arrange
+        Integer existingId = 1;
+        EnumeratesEntity entity = new EnumeratesEntity();
+        when(service.findByRowId(existingId)).thenReturn(Optional.of(entity));
+
+        // Act
+        Optional<EnumeratesEntity> result = service.findByRowId(existingId);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(entity, result.get());
+        verify(service, times(1)).findByRowId(existingId);
+    }
+
+    @Test
+    public void testFindByRowId_NonExistingId_ReturnsEmptyOptional() {
+        // Arrange
+        Integer nonExistingId = 100;
+        when(service.findByRowId(nonExistingId)).thenReturn(Optional.empty());
+
+        // Act
+        Optional<EnumeratesEntity> result = service.findByRowId(nonExistingId);
+
+        // Assert
+        assertFalse(result.isPresent());
+        verify(service, times(1)).findByRowId(nonExistingId);
+    }
+
+    @Test
+    public void testInsertEnumeratesDetails_SavesEntity() {
+        // Arrange
+        EnumeratesEntity entity = new EnumeratesEntity();
+        when(service.insertEnumeratesDetails(entity)).thenReturn(true);
+
+        // Act
+        boolean result = service.insertEnumeratesDetails(entity);
+
+        // Assert
+        assertTrue(result);
+        verify(service, times(1)).insertEnumeratesDetails(entity);
+    }
+}
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
