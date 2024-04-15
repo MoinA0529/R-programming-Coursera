@@ -1,60 +1,41 @@
-@Mock
-private CloudKeystoreService cloudKeystoreService;
+import org.junit.jupiter.api.Test;
+import org.springframework.util.ReflectionUtils;
 
-@InjectMocks
-private WebClientConfiguration webClientConfiguration;
+import java.lang.reflect.Field;
 
-@Test
-public void testGetWebclient() throws Exception {
-    // Arrange
-    CachedKeyStore cachedKeyStore = new CachedKeyStore();
-    cachedKeyStore.setKeystore(mock(KeyStore.class));
-    cachedKeyStore.setPassword("password");
-    when(cloudKeystoreService.cache().get("mykeystore")).thenReturn(cachedKeyStore);
+import static org.junit.jupiter.api.Assertions.*;
 
-    // Act
-    WebClient webClient = webClientConfiguration.getWebclient();
+public class DocSpaceDetailTest {
 
-    // Assert
-    assertNotNull(webClient);
-    assertEquals(webClientConfiguration.faBaseUrl, webClient.getWebClientConfiguration().getBaseUrl().toString());
-}
+    @Test
+    public void testGetRelationtype() {
+        // Arrange
+        DocSpaceDetail docSpaceDetail = new DocSpaceDetail();
+        String expectedRelationType = "someRelationType";
+        Field relationTypeField = ReflectionUtils.findField(DocSpaceDetail.class, "relationtype");
+        ReflectionUtils.makeAccessible(relationTypeField);
+        ReflectionUtils.setField(relationTypeField, docSpaceDetail, expectedRelationType);
 
-@Test
-public void testBuildCloseableHttpAsyncClient() throws Exception {
-    // Arrange
-    CachedKeyStore cachedKeyStore = new CachedKeyStore();
-    cachedKeyStore.setKeystore(mock(KeyStore.class));
-    cachedKeyStore.setPassword("password");
-    when(cloudKeystoreService.cache().get("mykeystore")).thenReturn(cachedKeyStore);
+        // Act
+        String actualRelationType = docSpaceDetail.getRelationtype();
 
-    // Act
-    CloseableHttpAsyncClient httpClient = webClientConfiguration.buildCloseableHttpAsyncClient();
+        // Assert
+        assertEquals(expectedRelationType, actualRelationType);
+    }
 
-    // Assert
-    assertNotNull(httpClient);
-    assertTrue(httpClient instanceof CloseableHttpAsyncClient);
-}
+    @Test
+    public void testSetRelationtype() {
+        // Arrange
+        DocSpaceDetail docSpaceDetail = new DocSpaceDetail();
+        String relationType = "newRelationType";
 
-@Test
-public void testAddCommonRequestHeaderValues() {
-    // Act
-    Consumer<HttpHeaders> headerConsumer = webClientConfiguration.addCommonRequestHeaderValues();
-    HttpHeaders headers = new HttpHeaders();
-    headerConsumer.accept(headers);
+        // Act
+        docSpaceDetail.setRelationtype(relationType);
 
-    // Assert
-    assertTrue(headers.containsKey(WF_SENDERMESSAGEID));
-    assertTrue(headers.containsKey(WF_CREATIONTIMESTAMP));
-    assertEquals(APPID, headers.getFirst(WF_SENDERAPPLICATIONID));
-    assertEquals(LOCALHOST, headers.getFirst(WF_SENDERHOSTNAME));
-}
-
-@Test(expected = Exception.class)
-public void testGetWebclientWithException() throws Exception {
-    // Arrange
-    when(cloudKeystoreService.cache().get("mykeystore")).thenThrow(new Exception());
-
-    // Act
-    webClientConfiguration.getWebclient();
-}
+        // Assert
+        Field relationTypeField = ReflectionUtils.findField(DocSpaceDetail.class, "relationtype");
+        ReflectionUtils.makeAccessible(relationTypeField);
+        String actualRelationType = (String) ReflectionUtils.getField(relationTypeField, docSpaceDetail);
+        assertEquals(relationType, actualRelationType);
+    }
+    }
