@@ -1,42 +1,44 @@
-@Test
-void testUpdateFileDetails() {
-    // Arrange
-    String id = "60a1c1d1c2d3e4f5g6h7i8j9"; // Example ObjectId as a string
-    ObjectId objectId = new ObjectId(id);
-    Fileupload existingFileupload = new Fileupload();
-    existingFileupload.set_id(objectId);
-    existingFileupload.setFileName("existing.txt");
-    existingFileupload.setFileCategory("documents");
-    existingFileupload.setFileSize(1024L);
-    existingFileupload.setFileState("uploaded");
-    existingFileupload.setNoOfChunks(1);
-    existingFileupload.setUserId("user123");
-    when(repository.findById(objectId)).thenReturn(Optional.of(existingFileupload));
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-    Fileupload updatedFileupload = new Fileupload();
-    updatedFileupload.setFileName("updated.txt");
-    updatedFileupload.setFileCategory("images");
-    updatedFileupload.setFileSize(2048L);
-    updatedFileupload.setFileState("processed");
-    updatedFileupload.setNoOfChunks(2);
-    updatedFileupload.setUserId("user456");
+class DocCenterServiceExceptionTest {
 
-    Fileupload expectedFileupload = new Fileupload();
-    expectedFileupload.set_id(objectId);
-    expectedFileupload.setFileName("updated.txt");
-    expectedFileupload.setFileCategory("images");
-    expectedFileupload.setFileSize(2048L);
-    expectedFileupload.setFileState("processed");
-    expectedFileupload.setNoOfChunks(2);
-    expectedFileupload.setUserId("user456");
-    when(repository.save(any(Fileupload.class))).thenReturn(expectedFileupload);
+    @Test
+    void testDefaultConstructor() {
+        // Arrange
+        String expectedMessage = "com.example.DocCenterServiceException";
 
-    // Act
-    Fileupload result = mongoService.updateFileDetails(id, updatedFileupload);
+        // Act
+        DocCenterServiceException exception = new DocCenterServiceException();
 
-    // Assert
-    assertNotNull(result);
-    assertEquals(expectedFileupload, result);
-    verify(repository, times(1)).findById(objectId);
-    verify(repository, times(1)).save(any(Fileupload.class));
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.toString());
+        Assertions.assertNull(exception.getCause());
+    }
+
+    @Test
+    void testMessageAndCauseConstructor() {
+        // Arrange
+        String expectedMessage = "An error occurred";
+        Throwable expectedCause = new RuntimeException("Cause of the error");
+
+        // Act
+        DocCenterServiceException exception = new DocCenterServiceException(expectedMessage, expectedCause);
+
+        // Assert
+        Assertions.assertEquals(expectedMessage, exception.getMessage());
+        Assertions.assertEquals(expectedCause, exception.getCause());
+    }
+
+    @Test
+    void testExceptionThrown() {
+        // Arrange
+        String expectedMessage = "Exception message";
+        Throwable expectedCause = new IllegalArgumentException("Cause of the exception");
+
+        // Act & Assert
+        Assertions.assertThrows(DocCenterServiceException.class, () -> {
+            throw new DocCenterServiceException(expectedMessage, expectedCause);
+        }, expectedMessage);
+    }
 }
