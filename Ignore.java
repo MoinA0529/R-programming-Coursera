@@ -1,35 +1,63 @@
-<dependency>
-    <groupId>org.springframework.security</groupId>
-    <artifactId>spring-security-test</artifactId>
-    <scope>test</scope>
-</dependency>
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
-@WebMvcTest
-@Import(DocCenterWebSecurityConfig.class)
-public class DocCenterWebSecurityConfigTest {
+class MongoServiceImplTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Mock
+    private FileUploadRepository repository;
 
-    @Test
-    public void testAllRequestsArePermitted() throws Exception {
-        mockMvc.perform(get("/any-url"))
-                .andExpect(status().isOk());
+    @Mock
+    private MongoTemplate mongoTemplate;
+
+    @InjectMocks
+    private MongoServiceImpl mongoService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testCsrfProtectionIsDisabled() throws Exception {
-        mockMvc.perform(get("/any-url")
-                .with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk());
+    void testFindById() {
+        // Arrange
+        String id = "123";
+        Fileupload fileupload = new Fileupload();
+        fileupload.setFilename("test.txt");
+        fileupload.setFileCategory("documents");
+        fileupload.setFileState("uploaded");
+        when(repository.findById(id)).thenReturn(Optional.of(fileupload));
+
+        // Act
+        Optional<Fileupload> result = mongoService.findById(id);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(fileupload, result.get());
+        verify(repository, times(1)).findById(id);
+    }
+
+    @Test
+    void testInsertFileDeatils() {
+        // Arrange
+        Fileupload fileupload = new Fileupload();
+        fileupload.setFilename("test.txt");
+        fileupload.setFileCategory("documents");
+        fileupload.setFileState("uploaded");
+
+        // Act
+        boolean result = mongoService.insertFileDeatils(fileupload);
+
+        // Assert
+        assertTrue(result);
+        verify(repository, times(1)).save(fileupload);
     }
 }
