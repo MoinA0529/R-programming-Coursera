@@ -1,3 +1,35 @@
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest
+@Import(DocCenterWebSecurityConfig.class)
+public class DocCenterWebSecurityConfigTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testAllowAllRequests() throws Exception {
+        mockMvc.perform(get("/any-url"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testCsrfDisabled() throws Exception {
+        mockMvc.perform(post("/any-url")
+                .contentType("application/json")
+                .content("{}"))
+                .andExpect(status().isOk());
+    }
+}
+
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
