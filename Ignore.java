@@ -1,4 +1,24 @@
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+testImplementation 'org.springframework.boot:spring-boot-starter-test'
+testImplementation 'org.springframework.security:spring-security-test'
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class DocDcenterSecurityConfigTests {
+    // ...
+}
 @Bean
 public CloudkeystoreService cloudkeystoreService() {
     return new CloudkeystoreService().addCacheResolver(createCloudVenaficertificateCacheResolver());
