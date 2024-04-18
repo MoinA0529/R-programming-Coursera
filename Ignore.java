@@ -1,3 +1,15 @@
+
+@Bean
+public CloudkeystoreService cloudkeystoreService() {
+    return new CloudkeystoreService().addCacheResolver(createCloudVenaficertificateCacheResolver());
+}
+
+private CloudVenaficertificateCacheResolver createCloudVenaficertificateCacheResolver() {
+    String venariCertificateName = "venafi-certificates";
+    return new CloudVenaficertificateCacheResolver(venariCertificateName).loadCache();
+}
+
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
