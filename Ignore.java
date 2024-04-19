@@ -1,33 +1,79 @@
+import com.google.gson.GsonBuilder;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
-import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.sql.DataSource;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(classes = EbReportDBConfiguration.class)
-class EbReportDBConfigurationTest {
+@TestPropertySource(properties = "fa.baseUrl=http://localhost:8092")
+class FAServiceIntegrationTest {
+
+    private static MockWebServer mockWebServer;
+    private static ExternalServiceConfig externalServiceConfig;
+
+    @Qualifier("faWebClient")
+    private WebClient webClient;
 
     @Autowired
-    private ApplicationContext applicationContext;
+    OauthService oauthService;
 
-    @Test
-    void testEbreportdbDatasource() {
-        DataSource dataSource = applicationContext.getBean("ebreportdbDatasource", DataSource.class);
-        assertThat(dataSource).isNotNull();
+    @BeforeAll
+    static void setup() throws IOException {
+        mockWebServer = new MockWebServer();
+        mockWebServer.start(8092);
+        externalServiceConfig = new ExternalServiceConfig(WebClient.create());
+    }
+
+    @AfterAll
+    static void tearDown() throws IOException {
+        mockWebServer.shutdown();
     }
 
     @Test
-    void testEbreportdbEntityManager() {
-        assertThat(applicationContext.containsBean("ebreportdbEntityManager")).isTrue();
+    void getDocSpaceListByECN_shouldReturnDocumentSpaceDetails() {
+        // Arrange
+        String ecn = "123";
+        String responseJson = "{\"data\": [{\"id\": \"space1\", \"customerEcn\": \"123\", \"status\": \"active\"}, {\"id\": \"space2\", \"customerEcn\": \"123\", \"status\": \"inactive\"}]}";
+        DocumentSpaceDetail space1 = new DocumentSpaceDetail();
+        space1.setId("space1");
+        space1.setCustomerEcn("123");
+        space1.setStatus("active");
+
+        DocumentSpaceDetail space2 = new DocumentSpaceDetail();
+        space2.setId("space2");
+        space2.setCustomerEcn("123");
+        space2.setStatus("inactive");
+
+        List<DocumentSpaceDetail> expectedDetails = Arrays.asList(space1, space2);
+
+        mockWebServer.enqueue(new MockResponse()
+                .setBody(responseJson)
+                .addHeader("Content-Type", "application/json"));
+
+        FAServiceIntegration faServiceIntegration = new FAServiceIntegration(externalServiceConfig, oauthService);
+
+        // Act
+        List<DocumentSpaceDetail> actualDetails = faServiceIntegration.getDocSpaceListByECN(ecn);
+
+        // Assert
+        assertEquals(expectedDetails.size(), actualDetails.size());
+        assertEquals(expectedDetails.get(0).getId(), actualDetails.get(0).getId());
+        assertEquals(expectedDetails.get(0).getCustomerEcn(), actualDetails.get(0).getCustomerEcn());
+        assertEquals(expectedDetails.get(0).getStatus(), actualDetails.get(0).getStatus());
+        assertEquals(expectedDetails.get(1).getId(), actualDetails.get(1).getId());
+        assertEquals(expectedDetails.get(1).getCustomerEcn(), actualDetails.get(1).getCustomerEcn());
+        assertEquals(expectedDetails.get(1).getStatus(), actualDetails.get(1).getStatus());
     }
 
-    @Test
-    void testEbreportdbTransactionManager() {
-        PlatformTransactionManager transactionManager = applicationContext.getBean("ebreportdbTransactionManager", PlatformTransactionManager.class);
-        assertThat(transactionManager).isNotNull();
-    }
+    // Add more test cases for different scenarios
 }
