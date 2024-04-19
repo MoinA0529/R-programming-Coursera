@@ -1,47 +1,33 @@
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
+import org.springframework.transaction.PlatformTransactionManager;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import javax.sql.DataSource;
 
-class AppDataAdapterTest {
+import static org.assertj.core.api.Assertions.assertThat;
 
-    @Mock
-    private Environment env;
+@SpringBootTest(classes = EbReportDBConfiguration.class)
+class EbReportDBConfigurationTest {
 
-    @InjectMocks
-    private AppDataAdapter appDataAdapter;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    @Test
+    void testEbreportdbDatasource() {
+        DataSource dataSource = applicationContext.getBean("ebreportdbDatasource", DataSource.class);
+        assertThat(dataSource).isNotNull();
     }
 
     @Test
-    void isActiveProfile_profileIsNull_returnsFalse() {
-        boolean result = appDataAdapter.isActiveProfile(null);
-        assertFalse(result);
+    void testEbreportdbEntityManager() {
+        assertThat(applicationContext.containsBean("ebreportdbEntityManager")).isTrue();
     }
 
     @Test
-    void isActiveProfile_profileIsNotActive_returnsFalse() {
-        String profile = "dev";
-        when(env.getActiveProfiles()).thenReturn(new String[]{"prod", "test"});
-
-        boolean result = appDataAdapter.isActiveProfile(profile);
-        assertFalse(result);
-    }
-
-    @Test
-    void isActiveProfile_profileIsActive_returnsTrue() {
-        String profile = "prod";
-        when(env.getActiveProfiles()).thenReturn(new String[]{"prod", "test"});
-
-        boolean result = appDataAdapter.isActiveProfile(profile);
-        assertTrue(result);
+    void testEbreportdbTransactionManager() {
+        PlatformTransactionManager transactionManager = applicationContext.getBean("ebreportdbTransactionManager", PlatformTransactionManager.class);
+        assertThat(transactionManager).isNotNull();
     }
 }
