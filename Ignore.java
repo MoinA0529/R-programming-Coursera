@@ -1,3 +1,62 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+class DocumentServiceTest {
+
+    @Mock
+    private FAServiceIntegration faServiceIntegration;
+
+    @InjectMocks
+    private DocumentService documentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void getDocSpaceList_shouldReturnDocumentSpaceDetails() {
+        // Given
+        String ecn = "123";
+        List<DocumentSpaceDetail> expectedDetails = new ArrayList<>();
+        expectedDetails.add(new DocumentSpaceDetail());
+        expectedDetails.add(new DocumentSpaceDetail());
+
+        when(faServiceIntegration.getDocSpaceListByECN(ecn)).thenReturn(expectedDetails);
+
+        // When
+        List<DocumentSpaceDetail> actualDetails = documentService.getDocSpaceList(ecn);
+
+        // Then
+        assertEquals(expectedDetails, actualDetails);
+        verify(faServiceIntegration, times(1)).getDocSpaceListByECN(ecn);
+    }
+
+    @Test
+    void getDocSpaceList_shouldReturnEmptyList_whenNoDocumentSpaceDetailsFound() {
+        // Given
+        String ecn = "456";
+        List<DocumentSpaceDetail> expectedDetails = new ArrayList<>();
+
+        when(faServiceIntegration.getDocSpaceListByECN(ecn)).thenReturn(expectedDetails);
+
+        // When
+        List<DocumentSpaceDetail> actualDetails = documentService.getDocSpaceList(ecn);
+
+        // Then
+        assertEquals(expectedDetails, actualDetails);
+        verify(faServiceIntegration, times(1)).getDocSpaceListByECN(ecn);
+    }
+}
 @Test
 void addSpecificRequestHeaderValues_shouldAddHeadersToHttpHeaders() {
     // Arrange
