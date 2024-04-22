@@ -4,6 +4,63 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
+
+class DocumentServiceTest {
+
+    @Mock
+    private FAServiceIntegration faServiceIntegration;
+
+    @InjectMocks
+    private DocumentService documentService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void getDocSpaceDetail_shouldReturnDocumentSpaceDetail() {
+        // Given
+        String docSpaceId = "123";
+        DocumentSpaceDetail expectedDetail = new DocumentSpaceDetail();
+        expectedDetail.setId(docSpaceId);
+        expectedDetail.setName("Document Space 1");
+
+        when(faServiceIntegration.getDocSpaceDetailByDocSpaceId(docSpaceId)).thenReturn(expectedDetail);
+
+        // When
+        DocumentSpaceDetail actualDetail = documentService.getDocSpaceDetail(docSpaceId);
+
+        // Then
+        assertEquals(expectedDetail, actualDetail);
+        verify(faServiceIntegration, times(1)).getDocSpaceDetailByDocSpaceId(docSpaceId);
+    }
+
+    @Test
+    void getDocSpaceDetail_shouldReturnNull_whenDocumentSpaceDetailNotFound() {
+        // Given
+        String docSpaceId = "456";
+
+        when(faServiceIntegration.getDocSpaceDetailByDocSpaceId(docSpaceId)).thenReturn(null);
+
+        // When
+        DocumentSpaceDetail actualDetail = documentService.getDocSpaceDetail(docSpaceId);
+
+        // Then
+        assertNull(actualDetail);
+        verify(faServiceIntegration, times(1)).getDocSpaceDetailByDocSpaceId(docSpaceId);
+    }
+}
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 import java.util.ArrayList;
 import java.util.List;
 
