@@ -1,74 +1,43 @@
-import com.google.gson.GsonBuilder;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.reactive.function.client.WebClient;
+@Test
+void addSpecificRequestHeaderValues_shouldAddHeadersToHttpHeaders() {
+    // Arrange
+    String token = "your-token";
+    when(oauthService.getToken()).thenReturn(token);
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+    // Act
+    Consumer<HttpHeaders> headerConsumer = (Consumer<HttpHeaders>) ReflectionTestUtils.invokeMethod(
+            faServiceIntegration, "addSpecificRequestHeaderValues", token);
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+    HttpHeaders headers = new HttpHeaders();
+    headerConsumer.accept(headers);
 
-@TestPropertySource(properties = "fa.baseUrl=http://localhost:8092")
-class FAServiceIntegrationTest {
+    // Assert
+    assertTrue(headers.containsKey("X-WF-CLIENT-ID"));
+    assertEquals("1WOCA", headers.getFirst("X-WF-CLIENT-ID"));
 
-    private static MockWebServer mockWebServer;
-    private static ExternalServiceConfig externalServiceConfig;
+    assertTrue(headers.containsKey("X-WF-REQUEST-DATE"));
+    assertNotNull(headers.getFirst("X-WF-REQUEST-DATE"));
 
-    @Qualifier("faWebClient")
-    private WebClient webClient;
+    assertTrue(headers.containsKey(CONTENT_TYPE));
+    assertEquals(MediaType.APPLICATION_JSON_VALUE, headers.getFirst(CONTENT_TYPE));
 
-    @Autowired
-    OauthService oauthService;
+    assertTrue(headers.containsKey(AUTHORIZATION));
+    assertEquals("Bearer " + token, headers.getFirst(AUTHORIZATION));
 
-    @BeforeAll
-    static void setup() throws IOException {
-        mockWebServer = new MockWebServer();
-        mockWebServer.start(8092);
-        externalServiceConfig = new ExternalServiceConfig(WebClient.create());
-    }
+    assertTrue(headers.containsKey("X-REQUEST-ID"));
+    assertNotNull(headers.getFirst("X-REQUEST-ID"));
+    assertTrue(UUID.fromString(headers.getFirst("X-REQUEST-ID")) instanceof UUID);
 
-    @AfterAll
-    static void tearDown() throws IOException {
-        mockWebServer.shutdown();
-    }
+    assertTrue(headers.containsKey("X-CORRELATION-ID"));
+    assertNotNull(headers.getFirst("X-CORRELATION-ID"));
+    assertTrue(UUID.fromString(headers.getFirst("X-CORRELATION-ID")) instanceof UUID);
 
-    @Test
-    void getDocSpaceListByECN_shouldReturnDocumentSpaceDetails() {
-        // Arrange
-        String ecn = "123";
-        String responseJson = "{\"data\": [{\"id\": \"space1\", \"customerEcn\": \"123\", \"status\": \"active\"}, {\"id\": \"space2\", \"customerEcn\": \"123\", \"status\": \"inactive\"}]}";
-        DocumentSpaceDetail space1 = new DocumentSpaceDetail();
-        space1.setId("space1");
-        space1.setCustomerEcn("123");
-        space1.setStatus("active");
+    assertTrue(headers.containsKey("x-api-key"));
+    assertEquals(faServiceIntegration.clientId, headers.getFirst("x-api-key"));
+}
 
-        DocumentSpaceDetail space2 = new DocumentSpaceDetail();
-        space2.setId("space2");
-        space2.setCustomerEcn("123");
-        space2.setStatus("inactive");
 
-        List<DocumentSpaceDetail> expectedDetails = Arrays.asList(space1, space2);
-
-        mockWebServer.enqueue(new MockResponse()
-                .setBody(responseJson)
-                .addHeader("Content-Type", "application/json"));
-
-        FAServiceIntegration faServiceIntegration = new FAServiceIntegration(externalServiceConfig, oauthService);
-
-        // Act
-        List<DocumentSpaceDetail> actualDetails = faServiceIntegration.getDocSpaceListByECN(ecn);
-
-        // Assert
-        assertEquals(expectedDetails.size(), actualDetails.size());
-        assertEquals(expectedDetails.get(0).getId(), actualDetails.get(0).getId());
-        assertEquals(expectedDetails.get(0).getCustomerEcn(), actualDetails.get(0).getCustomerEcn());
+d(), actualDetails.get(0).getId());        assertEquals(expectedDetails.get(0).getCustomerEcn(), actualDetails.get(0).getCustomerEcn());
         assertEquals(expectedDetails.get(0).getStatus(), actualDetails.get(0).getStatus());
         assertEquals(expectedDetails.get(1).getId(), actualDetails.get(1).getId());
         assertEquals(expectedDetails.get(1).getCustomerEcn(), actualDetails.get(1).getCustomerEcn());
