@@ -1,33 +1,25 @@
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.core.env.Environment;
-
-import javax.sql.DataSource;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-class EbReportDBConfigurationTest {
-
-    @Mock
-    private Environment env;
-
-    private EbReportDBConfiguration config;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        config = new EbReportDBConfiguration();
-        config.setEnv(env);
+@Test
+    void testUserEntityManager() {
+        // Arrange
+        when(config.userDataSource()).thenReturn(dataSource);
+        
+        // Act
+        LocalContainerEntityManagerFactoryBean result = config.userEntityManager();
+        
+        // Assert
+        assertNotNull(result, "EntityManagerFactoryBean should not be null");
+        assertNotNull(result.getDataSource(), "DataSource should not be null");
+        assertNotNull(result.getJpaVendorAdapter(), "JpaVendorAdapter should not be null");
     }
 
     @Test
-    void testUserDataSource() {
+    void testUserTransactionManager() {
+        // Arrange
+        when(config.userEntityManager()).thenReturn(new LocalContainerEntityManagerFactoryBean());
+        
         // Act
-        DataSource dataSource = config.userDataSource();
+        PlatformTransactionManager result = config.userTransactionManager();
         
         // Assert
-        assertNotNull(dataSource, "DataSource should not be null");
+        assertNotNull(result, "TransactionManager should not be null");
     }
-}
