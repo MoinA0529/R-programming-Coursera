@@ -1,44 +1,44 @@
-@RestController
-@RequestMapping("/api/repCodeOwners")
-public class RepCodeOwnersSearchController {
+public List<DataItem> searchRepCodeOwnersByECN(String ecn) throws DocCenterWebAppException {
+    OperationalLogManager operationalLogManager = new OperationalLogManager();
+    operationalLogManager.startDetailLogEntry("searchRepCodeOwnersByECN", "get",
+            "Apigee/FATool", "Fetching the list of RepCode Owners", "");
 
-    private final FAToolService faToolService;
+    ParameterizedTypeReference<RepCodeOwnersSearchResponseDetails> typeReference = new ParameterizedTypeReference<>() {};
 
-    public RepCodeOwnersSearchController(FAToolService faToolService) {
-        this.faToolService = faToolService;
+    RepCodeOwnersSearchResponseDetails response;
+
+    try {
+        Map<String, Object> eserPayload = new HashMap<>();
+        eserPayload.put("data", new RepCodeOwnersSearchRequest());
+
+        Map<String, Object> eserHeaders = new HashMap<>();
+        eserHeaders.put("Authorization", "Bearer OAuth Token passed.");
+        eserHeaders.put("ecn", ecn);
+
+        eserLogManager.logRequestTransmit(eserHeaders, eserPayload);
+
+        response = externalServiceConfig.invokeAPIGEE(HttpMethod.POST, ExternalService.FA_TOOL, "/api/repCodeOwners/search/v1",
+                null, null, eserHeaders, eserPayload, typeReference).block();
+
+        operationalLogManager.logDetailEntry(LOGGER, LogLevel.INFO, "Search RepCode Owners by ECN from FA Tool Service - Success", "", "", null);
+
+        eserPayload.put("data", response);
+        eserLogManager.logResponseReceived(eserHeaders, eserPayload);
+    } catch (DocCenterWebAppException e) {
+        eserLogManager.logError(e);
+        operationalLogManager.logDetailEntry(LOGGER, LogLevel.ERROR, "Search RepCode Owners by ECN from FA Tool Service Failed", "12334", e.getMessage(), e);
+        throw e;
     }
 
-    @PostMapping("/search")
-    public ResponseEntity<List<RepCodeOwnersSearchResponse>> searchRepCodeOwnersByECN(
-            @RequestHeader("ecn") String ecn) {
-        try {
-            List<RepCodeOwnersSearchResponse> repCodeOwners = faToolService.searchRepCodeOwnersByECN(ecn);
-            return ResponseEntity.ok(repCodeOwners);
-        } catch (Exception e) {
-            // Handle any exceptions or errors
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    List<DataItem> dataItems = new ArrayList<>();
+    if (response != null && response.getData() != null) {
+        for (RepCodeOwnersSearchResponse repCodeOwner : response.getData()) {
+            DataItem dataItem = new DataItem();
+            dataItem.setDocSpaceId(repCodeOwner.getDocSpaceId());
+            dataItem.setMembers(repCodeOwner.getMembers());
+            dataItems.add(dataItem);
         }
     }
+
+    return dataItems;
 }
-
-
-List<RepCodeRelationItem> repCodeRelationItems = new ArrayList<>();
-        for (RepCodeOwnersSearchResponse response : responseDetails.getData()) {
-            RepCodeRelationItem item = new RepCodeRelationItem();
-            item.setRepCode(response.getRepCode());
-            item.setSubFirm(response.getSubFirm());
-            item.setBranch(response.getBranch());
-            
-            List<TeamMemberRelationItem> memberItems = new ArrayList<>();
-            for (MemberData memberData : response.getMembers()) {
-                TeamMemberRelationItem memberItem = new TeamMemberRelationItem();
-                memberItem.setName(memberData.getName());
-                memberItem.setShowToClient(memberData.isShowToClient());
-                memberItem.setIndex(memberData.getIndex());
-                memberItem.setReceiveEmail(memberData.isReceiveEmail());
-                memberItem.setEmployeeId(memberData.getEmployeeId());
-                memberItem.setPpid(memberData.getPpid());
-                memberItem.setStatus(memberData.getStatus());
-                memberItems.add(memberItem);
-            }
-            item.setMembers(memberItems);
